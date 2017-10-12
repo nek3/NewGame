@@ -68,6 +68,8 @@ public class DungeonEditorWindow : EditorWindow
 	/// <summary> ボタンデフォルトサイズ </summary>
 	private float ButtonWidth { get { return 32; } }
 
+
+	private static Texture2D mTexture;
 	/// <summary> マップチップテクスチャ </summary>
 	private static TipTexture [] mTipTextures;
 
@@ -543,15 +545,18 @@ public class DungeonEditorWindow : EditorWindow
 	/// </summary>
 	private void Initialize()
 	{
+		if (mTexture == null) {
+			mTexture = Resources.Load<Texture2D>("MapTip");
+		}
 		if (mTipTextures == null) {
 			mTipTextures = new TipTexture[(int)ETipTexture.Max];
-			mTipTextures[(int)ETipTexture.Empty]		= new TipTexture("Empty", Dungeon.Cell.ECellType.Empty, 0);
-			mTipTextures[(int)ETipTexture.Wall]			= new TipTexture("Wall", Dungeon.Cell.ECellType.Wall, 0);
-			mTipTextures[(int)ETipTexture.Boss]			= new TipTexture("Boss", Dungeon.Cell.ECellType.Boss, 0);
-			mTipTextures[(int)ETipTexture.EntryPoint]	= new TipTexture("Player", Dungeon.Cell.ECellType.EntryPoint, 0);
-			mTipTextures[(int)ETipTexture.UpSteps]		= new TipTexture("UpSteps", Dungeon.Cell.ECellType.Steps, (int)Dungeon.Cell.EStepsValue.Up);
-			mTipTextures[(int)ETipTexture.DownSteps]	= new TipTexture("DownSteps", Dungeon.Cell.ECellType.Steps, (int)Dungeon.Cell.EStepsValue.Down);
-			mTipTextures[(int)ETipTexture.TreasureBox]	= new TipTexture("TreasureBox1", Dungeon.Cell.ECellType.TreasureBox, 0);
+			mTipTextures[(int)ETipTexture.Empty]		= new TipTexture(mTexture, "Empty", Dungeon.Cell.ECellType.Empty, 0);
+			mTipTextures[(int)ETipTexture.Wall]			= new TipTexture(mTexture, "Wall", Dungeon.Cell.ECellType.Wall, 0);
+			mTipTextures[(int)ETipTexture.Boss]			= new TipTexture(mTexture, "Boss", Dungeon.Cell.ECellType.Boss, 0);
+			mTipTextures[(int)ETipTexture.EntryPoint]	= new TipTexture(mTexture, "Player", Dungeon.Cell.ECellType.EntryPoint, 0);
+			mTipTextures[(int)ETipTexture.UpSteps]		= new TipTexture(mTexture, "UpSteps", Dungeon.Cell.ECellType.Steps, (int)Dungeon.Cell.EStepsValue.Up);
+			mTipTextures[(int)ETipTexture.DownSteps]	= new TipTexture(mTexture, "DownSteps", Dungeon.Cell.ECellType.Steps, (int)Dungeon.Cell.EStepsValue.Down);
+			mTipTextures[(int)ETipTexture.TreasureBox]	= new TipTexture(mTexture, "TreasureBox1", Dungeon.Cell.ECellType.TreasureBox, 0);
 		}
 		if (mDungeon == null) {
 			mDungeon = new Dungeon();
@@ -578,6 +583,9 @@ public class DungeonEditorWindow : EditorWindow
 	/// </summary>
 	private class TipTexture
 	{
+		private const int Width = 32;
+		private const int Height = 32;
+		
 		private string					mName;
 
 		/// <summary> テクスチャ </summary>
@@ -587,13 +595,52 @@ public class DungeonEditorWindow : EditorWindow
 		/// <summary>
 		/// コンストラクタ
 		/// </summary>
-		public 
-            (string name, Dungeon.Cell.ECellType cellType, int value)
+		public TipTexture(Texture2D texture, string name, Dungeon.Cell.ECellType cellType, int value)
 		{
 			mName = name;
 			CellType = cellType;
 			CellValue = value;
-			Texture = (Texture2D)AssetDatabase.LoadAssetAtPath("Assets/EditorResources/" + mName + ".png" , typeof(Texture2D));
+
+			Texture = new Texture2D(Width, Height, TextureFormat.ARGB32, false);
+
+			int x = 0;
+			int y = 0;
+			switch (cellType) {
+			case Dungeon.Cell.ECellType.Empty:
+				break;
+			case Dungeon.Cell.ECellType.Wall:
+				x = 1;
+					break;
+			case Dungeon.Cell.ECellType.Steps:
+				if (value == (int)Dungeon.Cell.EStepsValue.Up)
+				{
+					x = 2;
+				}
+				else
+				{
+					x = 3;
+				}
+				break;
+
+			case Dungeon.Cell.ECellType.TreasureBox:
+				x = 5;
+				break;
+
+			case Dungeon.Cell.ECellType.Boss:
+				x = 8;
+				break;
+			}
+			x *= Width;
+			y *= Height;
+
+			for (int j = 0; j < Height; j++) {
+				for (int i = 0; i < Width; i++)	{
+					Texture.SetPixel(i, j, texture.GetPixel(x + i, y + j));
+				}
+			}
+			Texture.Apply();
+
+
 			Debug.Assert(Texture != null);
 		}
 
